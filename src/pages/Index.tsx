@@ -10,6 +10,7 @@ import { backgrounds } from "@/data";
 
 const Index = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  console.log(videoFile);
   const [selectedBackground, setSelectedBackground] =
     useState<Background | null>(null);
   const [opacity, setOpacity] = useState<number>(0.8);
@@ -40,7 +41,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2  space-y-8">
             <VideoPreview
               videoFile={videoFile}
               background={selectedBackground}
