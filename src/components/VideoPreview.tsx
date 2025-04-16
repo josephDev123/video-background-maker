@@ -236,7 +236,7 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gradient">Preview</h2>
 
-      <div className="glass-morphism p-1 rounded-lg relative  aspect-video h-[500px] overflow-hidden">
+      <div className="glass-morphism p-1 rounded-lg relative w-full aspect-video h-[500px] overflow-hidden">
         {/* {!videoFile && !background && (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-muted-foreground text-center">

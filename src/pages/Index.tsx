@@ -41,7 +41,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2  space-y-8">
+          <div className="lg:col-span-2 col-span-1 space-y-8">
             <VideoPreview
               videoFile={videoFile}
               background={selectedBackground}
