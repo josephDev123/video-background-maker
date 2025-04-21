@@ -7,19 +7,28 @@ import VideoPreview from "@/components/VideoPreview";
 import BackgroundControls from "@/components/BlendControls";
 import { Toaster } from "@/components/ui/sonner";
 import { backgrounds } from "@/data";
+import { toast } from "sonner";
 
 const Index = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  console.log(videoFile);
   const [selectedBackground, setSelectedBackground] =
     useState<Background | null>(null);
   const [opacity, setOpacity] = useState<number>(0.8);
+  const [computeFrameStatus, setComputeFrameStatus] = useState<
+    "idle" | "processing" | "completed"
+  >("idle");
 
   const handleVideoUpload = (file: File) => {
     setVideoFile(file);
   };
 
   const handleBackgroundSelect = (background: Background) => {
+    if (computeFrameStatus === "idle" || computeFrameStatus === "processing") {
+      toast("Please wait for the frame to be computed", {
+        duration: 2000,
+      });
+      return;
+    }
     setSelectedBackground(background);
   };
 
@@ -46,6 +55,7 @@ const Index = () => {
               videoFile={videoFile}
               background={selectedBackground}
               opacity={opacity}
+              setComputeFrameStatus={setComputeFrameStatus}
             />
 
             <BackgroundControls opacity={opacity} setOpacity={setOpacity} />
