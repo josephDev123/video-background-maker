@@ -23,12 +23,12 @@ const Index = () => {
   };
 
   const handleBackgroundSelect = (background: Background) => {
-    if (computeFrameStatus === "idle" || computeFrameStatus === "processing") {
-      toast("Please wait for the frame to be computed", {
-        duration: 2000,
-      });
-      return;
-    }
+    // if (computeFrameStatus === "idle" || computeFrameStatus === "processing") {
+    //   toast("Please wait for the frame to be computed", {
+    //     duration: 2000,
+    //   });
+    //   return;
+    // }
     setSelectedBackground(background);
   };
 

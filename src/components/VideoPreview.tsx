@@ -21,13 +21,16 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
   setComputeFrameStatus,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  // const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas1Ref = useRef<HTMLCanvasElement | null>(null);
   const canvas2Ref = useRef<HTMLCanvasElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const bgImageRef = useRef<HTMLImageElement | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
-  // const animationRef = useRef<number>(0);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [ProcessFrameStatus, SetProcessFrameStatus] =
     useState<IProcessFrameStatus>("idle");
@@ -47,6 +50,22 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
     setComputeFrameStatus(ProcessFrameStatus);
   }, [ProcessFrameStatus]);
 
+  useEffect(() => {
+    if (!background?.src) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // Important for remote images!
+    img.src = background.src;
+
+    img.onload = () => {
+      bgImageRef.current = img;
+    };
+
+    img.onerror = (err) => {
+      console.error("Failed to load background image:", err);
+    };
+  }, [background]);
+
   const handleStart = () => {
     if (!videoFile) {
       alert("no video uploaded");
@@ -64,16 +83,64 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
       clearInterval(intervalRef.current!);
     } else {
       videoElement.play();
-      intervalRef.current = setInterval(() => {
-        if (!videoElement.paused && !videoElement.ended) {
-          SetProcessFrameStatus("processing");
-          computeFrame();
-          SetProcessFrameStatus("completed");
-        }
-      }, 30); // 30ms ~ roughly 33fps
+      requestAnimationFrame(playLoop);
     }
 
     setIsPlaying((prev) => !prev);
+  };
+
+  const playLoop = () => {
+    if (
+      videoRef.current &&
+      !videoRef.current.paused &&
+      !videoRef.current.ended
+    ) {
+      SetProcessFrameStatus("processing");
+      computeFrame();
+      SetProcessFrameStatus("completed");
+      requestAnimationFrame(playLoop);
+    }
+  };
+
+  const handleRecordToggle = () => {
+    if (!canvas2Ref.current) return;
+
+    if (!isRecording) {
+      // Start recording
+      const canvasStream = canvas2Ref.current.captureStream(30); // 30 fps
+      const mediaRecorder = new MediaRecorder(canvasStream, {
+        mimeType: "video/webm; codecs=vp9",
+      });
+
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, {
+          type: "video/webm",
+        });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "chroma_output.webm";
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+    } else {
+      // Stop recording
+      mediaRecorderRef.current?.stop();
+    }
+
+    setIsRecording((prev) => !prev);
   };
 
   const computeFrame = () => {
@@ -94,6 +161,10 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
 
     const ctx1 = canvas1.getContext("2d");
     const ctx2 = canvas2.getContext("2d");
+
+    // Step 1: draw background image on canvas2
+    ctx2.clearRect(0, 0, width, height);
+    ctx2.drawImage(bgImageRef.current, 0, 0, width, height); // draw the background first
 
     ctx1.drawImage(video, 0, 0, width, height);
     const imageData = ctx1.getImageData(0, 0, width, height);
@@ -116,6 +187,10 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
 
     const newImageData = new ImageData(frame, width, height);
     ctx2.putImageData(newImageData, 0, 0);
+
+    // Optional debug: confirm it's rendering
+    const check = ctx2.getImageData(0, 0, width, height).data.slice(0, 20);
+    console.log("Canvas2 pixel check:", check);
   };
 
   return (
@@ -184,16 +259,11 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
-          size="icon"
           disabled={!videoFile || !background}
-          // onClick={togglePlayPause}
-          className="glass-morphism"
+          onClick={handleRecordToggle}
+          className="glass-morphism px-3"
         >
-          {isPlaying ? (
-            <Pause className="h-5 w-5" />
-          ) : (
-            <Play className="h-5 w-5" />
-          )}
+          {isRecording ? "Stop Recording" : "Start Recording"}
         </Button>
 
         <Button
