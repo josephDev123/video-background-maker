@@ -57,4 +57,10 @@ export const backgrounds: Background[] = [
       "https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=300&h=169&q=80",
     src: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&w=1920&h=1080&q=80",
   },
+  {
+    id: "9",
+    name: "React logo",
+    thumbnail: "logo.png",
+    src: "logo.png",
+  },
 ];
